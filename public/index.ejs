@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Light Web Ctrl</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- check if enableJavascript is true and if so, include the script tag -->
+    <% if (enableJavascript) { %>
+    <script src="scripts.js"></script>
+    <% } %>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Light Web Ctrl</h1>
+<!-- loop over the lights and create a color picker for each -->
+<div id="fancy-lights" class="ctrl-container-wrapper">
+    <h2>Fancy Lights</h2>
+    <div class="ctrl-container">
+    <% mqttFancylightsAll.forEach(function(light) { %>
+    <div class="ctrl-item">
+        <form action="/api/fancy-lights" method="get" id="fancy-lights-form">
+            <h3><%= light %></h3>
+            <!-- use fancyLightCtrlActionToHexcolor(state.fancyLightCtrl[light]) to set the color picker value -->
+            <input type="color" name="<%= light %>" id="fancylight-<%= light %>"
+                   value="<%= state.fancyLightCtrl[light] ? fancyLightCtrlActionToHexcolor(state.fancyLightCtrl[light]) : '#000000' %>">
+            <input type="submit" value="Set Color">
+        </form>
+    </div>
+    <% }); %>
+    </div>
+</div>
+<!-- loop over the scripts and create a button for each -->
+<div id="scripts" class="ctrl-container-wrapper">
+    <h2>Scripts</h2>
+    <div class="ctrl-container">
+    <% Object.keys(presetFunctions).forEach(function(script) { %>
+    <div class="ctrl-item-with-button">
+        <form action="/api/ctrl-script" method="get" id="scripts-form">
+            <input type="submit" name="script" value="<%= script %>" class="ctrl-button">
+        </form>
+    </div>
+    <% }); %>
+</div>
+</div>
+</body>
+</html>

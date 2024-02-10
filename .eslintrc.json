@@ -1,0 +1,18 @@
+{
+    "extends": ["airbnb-base", "airbnb-typescript/base"],
+    "ignorePatterns": ["node_modules/", "dist", "public"],
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        // Fix Airbnb's config
+        "indent": ["error", 4],
+        "@typescript-eslint/indent": ["error", 4],
+
+        "no-console": "off",
+
+        "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
+
+        "max-len": ["error", { "code": 200 }]
+    }
+}
