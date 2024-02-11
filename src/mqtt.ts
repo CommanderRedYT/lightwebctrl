@@ -1,5 +1,13 @@
 import mqtt, { MqttClient } from 'mqtt';
-import { isFancyLightCtrlTopic } from './meta';
+import type { Request, Response } from 'express';
+// eslint-disable-next-line import/no-cycle
+import {
+    esphomeR3ActionTopic, EspHomeR3Toggles, formatLightCtrlTopic,
+    GoLightCtrlToggles,
+    isEsphomeR3StatusTopic,
+    isFancyLightCtrlTopic,
+    isLightCtrlTopic, zigbee2mqttActionTopic, Zigbee2mqttToggles,
+} from './meta';
 
 let mqttClient: MqttClient | null = null;
 
@@ -14,14 +22,33 @@ export interface State {
             ww: number;
             cw: number;
         };
+    },
+    goLightCtrl: {
+        [key: string]: {
+            Action: string;
+        }
+    },
+    realraum: {
+        [key: string]: {
+            status: string;
+            state: string;
+        }
     }
 }
 
 const state: State = {
     fancyLightCtrl: {},
+    goLightCtrl: {},
+    realraum: {},
 };
 
 export const getState = (): State => state;
+
+/*
+setInterval(() => {
+    console.dir(state.realraum);
+}, 1000);
+*/
 
 export const subscribe = (topic: string): void => {
     if (mqttClient) {
@@ -40,6 +67,8 @@ export const publish = (topic: string, message: string | object): void => {
             msg = JSON.stringify(message);
         }
 
+        console.log('publishing', topic, msg);
+
         mqttClient.publish(topic, msg, { retain: true });
     } else {
         console.error('mqttClient not initialized');
@@ -55,12 +84,27 @@ export const disconnect = (): void => {
     }
 };
 
-export const handleFancyLightCtrlMessage = (topic: string, message: Buffer): void => {
-    const light = topic.split('/')[1];
+export const handleFancyLightCtrlMessage = (light: string, message: Buffer): void => {
     const data = JSON.parse(message.toString());
 
     state.fancyLightCtrl[light] = data;
-    console.log('handleFancyLightCtrlMessage', light, data);
+    // console.log('handleFancyLightCtrlMessage', light, data);
+};
+
+export const handleLightCtrlMessage = (light: string, message: Buffer): void => {
+    const data = JSON.parse(message.toString());
+
+    state.goLightCtrl[light] = data;
+    // console.log('handleLightCtrlMessage', light, data);
+};
+
+export const handleRealraumMessage = (light: string, message: Buffer): void => {
+    const data = JSON.parse(message.toString());
+
+    console.log('handleRealraumMessage', light, data);
+
+    state.realraum[light] = data;
+    // console.log('handleRealraumMessage', light, data);
 };
 
 export const initMqtt = async (): Promise<void> => {
@@ -82,8 +126,29 @@ export const initMqtt = async (): Promise<void> => {
 
     mqttClient.on('message', (topic, message) => {
         // console.log('mqtt message', topic, message.toString());
-        if (isFancyLightCtrlTopic(topic)) {
-            handleFancyLightCtrlMessage(topic, message);
+        try {
+            const lightCtrlTopic = isLightCtrlTopic(topic);
+            const fancyLightCtrlTopic = isFancyLightCtrlTopic(topic);
+            const esphomeR3StatusTopic = isEsphomeR3StatusTopic(topic);
+
+            if (lightCtrlTopic) {
+                handleLightCtrlMessage(lightCtrlTopic, message);
+                return;
+            }
+
+            if (fancyLightCtrlTopic) {
+                handleFancyLightCtrlMessage(fancyLightCtrlTopic, message);
+                return;
+            }
+
+            if (esphomeR3StatusTopic) {
+                handleRealraumMessage(esphomeR3StatusTopic, message);
+                return;
+            }
+
+            // console.error('unknown mqtt topic', topic);
+        } catch (e) {
+            console.error('error handling mqtt message', e);
         }
     });
 
@@ -93,5 +158,62 @@ export const initMqtt = async (): Promise<void> => {
 };
 
 const getMqttClient = (): MqttClient | null => mqttClient;
+
+export const handleLightRequest = async (req: Request, res: Response): Promise<void> => {
+    console.log('handleLightRequest', req.body);
+
+    const { light } = req.body;
+
+    if (light && GoLightCtrlToggles.includes(light)) {
+        const topic = formatLightCtrlTopic(light);
+        const currentStatus = state.realraum[light] ?? { state: 'on' };
+
+        if (!currentStatus) {
+            console.error('currentStatus not found', light);
+            return;
+        }
+
+        console.log('currentStatus', currentStatus);
+
+        const newStatus = currentStatus.state.toLowerCase() === 'on' ? 'off' : 'on';
+
+        publish(topic, { Action: newStatus });
+        state.realraum[light] = { ...currentStatus, state: newStatus };
+    }
+
+    if (light && EspHomeR3Toggles.includes(light)) {
+        const topic = esphomeR3ActionTopic(light);
+        const currentStatus = state.realraum[light] ?? { state: 'on' };
+
+        if (!currentStatus) {
+            console.error('currentStatus not found', light);
+            return;
+        }
+
+        console.log('currentStatus', currentStatus);
+
+        const newStatus = currentStatus.state.toLowerCase() === 'on' ? 'off' : 'on';
+
+        publish(topic, { state: newStatus });
+        state.realraum[light] = { ...currentStatus, state: newStatus };
+    }
+
+    if (light && Zigbee2mqttToggles.includes(light)) {
+        const topic = zigbee2mqttActionTopic(light);
+        const currentStatus = state.realraum[light] ?? { state: 'ON' };
+
+        if (!currentStatus) {
+            console.error('currentStatus not found', light);
+            return;
+        }
+
+        console.log('currentStatus', currentStatus);
+
+        const newStatus = currentStatus.state.toLowerCase() === 'on' ? 'off' : 'on';
+
+        publish(topic, { state: newStatus });
+        state.realraum[light] = { ...currentStatus, state: newStatus };
+    }
+};
 
 export default getMqttClient;

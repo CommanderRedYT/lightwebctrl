@@ -1,20 +1,40 @@
 import express from 'express';
 
-import {fancyLightCtrlActionToHexcolor, mqttFancylightsAll, mqttScriptCtrlScripts, presetFunctions} from './meta';
+import fs from 'fs';
+import {
+    fancyLightCtrlActionToHexcolor, mqttFancylightsAll, mqttScriptCtrlScripts, presetFunctions,
+} from './meta';
 
 import api from './api';
 import { getState } from './mqtt';
 
 const app = express();
 
-app.use((req, res, next) => {
-    if (req.query.enableJavascript === 'true') {
-        // @ts-ignore
-        req.javascriptEnabled = true;
+const importSvg = (name: string): string => fs.readFileSync(`public/${name}`).toString();
+
+const render = (req: express.Request, res: express.Response): void => {
+    let path = 'index';
+
+    if (req.path !== '/') {
+        path = req.path.substring(1);
     }
 
-    next();
-});
+    // remove trailing slash and file extension if present
+    if (path.endsWith('/')) {
+        path = path.substring(0, path.length - 1);
+    }
+
+    console.log('rendering', path);
+
+    res.render(path, {
+        mqttFancylightsAll,
+        mqttScriptCtrlScripts,
+        importSvg,
+        fancyLightCtrlActionToHexcolor,
+        presetFunctions,
+        state: getState(),
+    });
+};
 
 app.set('view engine', 'ejs');
 app.set('views', 'public');
@@ -23,15 +43,11 @@ app.use(express.static('public'));
 app.use('/api', api);
 
 app.get('/', (req, res) => {
-    res.render('index', {
-        mqttFancylightsAll,
-        mqttScriptCtrlScripts,
-        fancyLightCtrlActionToHexcolor,
-        presetFunctions,
-        // @ts-ignore
-        enableJavascript: req.javascriptEnabled,
-        state: getState(),
-    });
+    render(req, res);
+});
+
+app.get('/fancy', (req, res) => {
+    render(req, res);
 });
 
 export default app;

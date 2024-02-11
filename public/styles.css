@@ -1,7 +1,18 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: 'Nunito', sans-serif;
     font-size: 16px;
     line-height: 1.6;
+}
+
+.container {
+    margin: 4px;
 }
 
 .ctrl-container-wrapper {
@@ -68,4 +79,69 @@ input[type="color"] {
 
 h1, h2, h3, h4, h5, h6 {
     margin-top: 0;
+}
+
+.fancy-button-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.fancy-button {
+    background-image: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080);
+    background-size: 2000% 2000%;
+    animation: rainbow 5s linear infinite;
+    border: none;
+    border-radius: 16px;
+    padding: 8px 16px;
+    color: #fff;
+    cursor: pointer;
+    transition: background-position 0.3s;
+    text-align: center;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fancy-button {
+        animation: none;
+    }
+}
+
+@keyframes rainbow {
+    0% {
+        background-position:0% 82%;
+        color: #fff;
+    }
+    50%{
+        background-position:100% 19%;
+        color: #000;
+    }
+    100%{
+        background-position:0% 82%;
+        color: #fff;
+    }
+}
+
+.fancy-ctrl-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 16px;
+    background-color: #fff;
+    color: #000;
+    width: 100%;
+    height: 100%;
+}
+
+.fancy-ctrl-container svg {
+    border-radius: 16px;
+    max-height: 100vh;
+    width: 100%;
+    height: auto;
 }

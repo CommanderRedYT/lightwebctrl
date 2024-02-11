@@ -1,17 +1,20 @@
 import express from 'express';
+import bodyParser from 'body-parser';
 import {
     fancyLightCtrlActionFromHexcolor,
     formatFancyLightCtrlTopic,
     mqttFancylightsAll,
     presetFunctions,
 } from './meta';
-import { getState, publish } from './mqtt';
+import { getState, handleLightRequest, publish } from './mqtt';
 
 const api = express.Router();
 
+api.use(bodyParser.json());
+api.use(bodyParser.urlencoded({ extended: true }));
+
 const endApi = (req: express.Request, res: express.Response): void => {
-    // @ts-ignore
-    res.setHeader('Location', req.enableJavascript ? '/?enableJavascript=true' : '/');
+    res.setHeader('Location', '/');
     res.sendStatus(307);
 };
 
@@ -50,6 +53,12 @@ api.get('/ctrl-script', (req, res) => {
     }
 
     endApi(req, res);
+});
+
+api.post('/handleLight', async (req, res) => {
+    await handleLightRequest(req, res);
+
+    res.json({ success: true, state: getState() });
 });
 
 export default api;

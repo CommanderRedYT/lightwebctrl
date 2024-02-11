@@ -1,4 +1,5 @@
-import { publish } from './mqtt';
+// eslint-disable-next-line import/no-cycle
+import {publish} from './mqtt';
 
 const mqtttopicActivatescript = 'action/ceilingscripts/activatescript';
 const mqtttopicPipeledpattern = 'action/PipeLEDs/pattern';
@@ -81,6 +82,21 @@ export const mqttFancylightsCeilingonly = [
 
 export const mqttFancylightsW2realfunk = [
     'funkbude',
+];
+
+export const GoLightCtrlToggles = [
+    'floodtesla',
+    'couchwhite',
+    'couchred',
+    'regalleinwand',
+];
+
+export const EspHomeR3Toggles = [
+    'subtable',
+];
+
+export const Zigbee2mqttToggles = [
+    'bluebar',
 ];
 
 export interface LedFactors {
@@ -173,6 +189,14 @@ export const r3LedFactors: Record<string, LedFactors> = {
 
 export const formatLightCtrlTopic = (light: string): string => `action/GoLightCtrl/${light}`;
 
+export const isLightCtrlTopic = (topic: string): false | string => {
+    const match = topic.match(/^action\/GoLightCtrl\/([^/]+)$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
+
 export interface FancyLightCtrlAction {
     r: number;
     g: number;
@@ -183,31 +207,73 @@ export interface FancyLightCtrlAction {
 
 export const formatFancyLightCtrlTopic = (light: string): string => `action/${light}/light`;
 
-export const isFancyLightCtrlTopic = (topic: string): boolean => /^action\/[^/]+\/light$/.test(topic);
+export const isFancyLightCtrlTopic = (topic: string): false | string => {
+    const match = topic.match(/^action\/([^/]+)\/light$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const formatSonoffTopic = (sonoff: string): string => `action/${sonoff}/POWER`;
 
-export const isSonoffTopic = (topic: string): boolean => /^action\/[^/]+\/POWER$/.test(topic);
+export const isSonoffTopic = (topic: string): false | string => {
+    const match = topic.match(/^action\/([^/]+)\/POWER$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const esphomeR3ActionTopic = (light: string): string => `action/${light}/command`;
 
-export const isEsphomeR3ActionTopic = (topic: string): boolean => /^action\/[^/]+\/command$/.test(topic);
+export const isEsphomeR3ActionTopic = (topic: string): false | string => {
+    const match = topic.match(/^action\/([^/]+)\/command$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
-export const esphomeR3StatusTopic = (light: string): string => `status/${light}/state`;
+export const esphomeR3StatusTopic = (light: string): string => `realraum/${light}/state`;
 
-export const isEsphomeR3StatusTopic = (topic: string): boolean => /^status\/[^/]+\/state$/.test(topic);
+export const isEsphomeR3StatusTopic = (topic: string): false | string => {
+    const match = topic.match(/^realraum\/([^/]+)\/state$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const zigbee2mqttStatusTopic = (light: string): string => `zigbee2mqtt/${light}`;
 
-export const isZigbee2mqttStatusTopic = (topic: string): boolean => /^zigbee2mqtt\/[^/]+\/state$/.test(topic);
+export const isZigbee2mqttStatusTopic = (topic: string): false | string => {
+    const match = topic.match(/^zigbee2mqtt\/([^/]+)$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const zigbee2mqttActionTopic = (light: string): string => `zigbee2mqtt/${light}/set`;
 
-export const isZigbee2mqttActionTopic = (topic: string): boolean => /^zigbee2mqtt\/[^/]+\/set$/.test(topic);
+export const isZigbee2mqttActionTopic = (topic: string): false | string => {
+    const match = topic.match(/^zigbee2mqtt\/([^/]+)\/set$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const formatWledActionTopic = (light: string): string => `action/wled/${light}/api`;
 
-export const isWledActionTopic = (topic: string): boolean => /^action\/wled\/[^/]+\/api$/.test(topic);
+export const isWledActionTopic = (topic: string): false | string => {
+    const match = topic.match(/^action\/wled\/([^/]+)\/api$/);
+    if (match) {
+        return match[1];
+    }
+    return false;
+};
 
 export const hex2rgb = (hex: string): { r: number; g: number; b: number } => {
     const bigint = parseInt(hex.replace('#', ''), 16);
@@ -252,8 +318,6 @@ export const fancyLightCtrlActionFromHexcolor = (hexcolor: string): FancyLightCt
 };
 
 export const fancyLightCtrlActionToHexcolor = ({ r, g, b }: Partial<FancyLightCtrlAction>): string => {
-    console.log('fancyLightCtrlActionToHexcolor', r, g, b);
-
     const hex = (c: number): string => c.toString(16).padStart(2, '0');
 
     if (r === undefined || g === undefined || b === undefined) {
@@ -264,11 +328,7 @@ export const fancyLightCtrlActionToHexcolor = ({ r, g, b }: Partial<FancyLightCt
 
     const { r: ur, g: ug, b: ub } = unfixRgb1000({ r, g, b });
 
-    const out = `#${hex(Math.round(ur))}${hex(Math.round(ug))}${hex(Math.round(ub))}`;
-
-    console.log('fancyLightCtrlActionToHexcolor', out);
-
-    return out;
+    return `#${hex(Math.round(ur))}${hex(Math.round(ug))}${hex(Math.round(ub))}`;
 };
 
 export function ceilingPreset_BeamerTalkMode() {

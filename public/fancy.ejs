@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fancy Light Web Ctrl</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="scripts.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<noscript>
+    <style>
+        .hide-without-js {
+            display: none;
+        }
+        body {
+            text-align: center;
+        }
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+    <div class="center">
+        <h1>Enable JavaScript to use this page!</h1>
+    </div>
+</noscript>
+<div class="hide-without-js container">
+    <div class="fancy-ctrl-container">
+        <%- importSvg('realraum-w1.svg') %>
+    </div>
+</div>
+</body>
+</html>
